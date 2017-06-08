@@ -230,7 +230,7 @@ Blockly.onKeyDown_ = function(e) {
  * @private
  */
 Blockly.copy_ = function(block) {
-  var xmlBlock = Blockly.Xml.blockToDom(block);
+  var xmlBlock = Blockly.Xml.blockToDom(block, true);
   // Encode start position in XML.
   var xy = block.getRelativeToSurfaceXY();
   xmlBlock.setAttribute('x', block.RTL ? -xy.x : xy.x);
