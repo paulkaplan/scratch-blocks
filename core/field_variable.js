@@ -101,32 +101,33 @@ Blockly.FieldVariable.prototype.getValue = function() {
   return this.getText();
 };
 
+
 /**
  * Set the variable name.
- * @param {string} newValue New text.
+ * @param {string} value New text.
  */
-Blockly.FieldVariable.prototype.setValue = function(newValue) {
-  if (this.sourceBlock_ && Blockly.Events.isEnabled()) {
-    Blockly.Events.fire(new Blockly.Events.BlockChange(
-        this.sourceBlock_, 'field', this.name, this.value_, newValue));
-  }
+Blockly.FieldVariable.prototype.setValue = function(value) {
+  var newText = value;
+  var newValue = value;
   if (this.sourceBlock_) {
-    var variable = this.sourceBlock_.workspace.getVariableById(newValue);
+    var variable = this.sourceBlock_.workspace.getVariableById(value);
     if (variable) {
-      this.setText(variable.name);
-      this.value_ = newValue;
-      return;
+      // Value was a valid variable id.
+      newText = variable.name;
     }
     // TODO(marisaleung): Remove name lookup after converting all Field Variable
     //     instances to use id instead of name.
-    else if (variable = this.sourceBlock_.workspace.getVariable(newValue)) {
-      this.setText(newValue);
-      this.value_ = variable.getId();
-      return;
+    else if (variable = this.sourceBlock_.workspace.getVariable(value)) {
+      // Value was a valid variable name.
+      newValue = variable.getId();
+    }
+    if (Blockly.Events.isEnabled()) {
+      Blockly.Events.fire(new Blockly.Events.BlockChange(
+        this.sourceBlock_, 'field', this.name, this.value_, newValue));
     }
   }
   this.value_ = newValue;
-  this.setText(newValue);
+  this.setText(newText);
 };
 
 /**
