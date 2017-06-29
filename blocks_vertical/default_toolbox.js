@@ -196,12 +196,12 @@ Blockly.Blocks.defaultToolbox = '<xml id="toolbox-categories" style="display: no
     '<block type="looks_size" id="looks_size"></block>'+
   '</category>'+
   '<category name="Sound" colour="#D65CD6" secondaryColour="#BD42BD">'+
-    '<block type="sound_play" id="sound_play">'+
+    '<block type="sound_playuntildone" id="sound_playuntildone">'+
       '<value name="SOUND_MENU">'+
         '<shadow type="sound_sounds_menu"></shadow>'+
       '</value>'+
     '</block>'+
-    '<block type="sound_playuntildone" id="sound_playuntildone">'+
+    '<block type="sound_play" id="sound_play">'+
       '<value name="SOUND_MENU">'+
         '<shadow type="sound_sounds_menu"></shadow>'+
       '</value>'+
