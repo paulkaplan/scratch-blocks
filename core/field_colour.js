@@ -27,10 +27,12 @@
 goog.provide('Blockly.FieldColour');
 
 goog.require('Blockly.Field');
+goog.require('Blockly.DropDownDiv');
 goog.require('goog.dom');
 goog.require('goog.events');
 goog.require('goog.style');
 goog.require('goog.ui.ColorPicker');
+goog.require('goog.ui.Slider');
 
 /**
  * Class for a colour input field.
@@ -64,25 +66,24 @@ Blockly.FieldColour.prototype.colours_ = null;
 Blockly.FieldColour.prototype.columns_ = 0;
 
 /**
+ * Function to be called if eyedropper can be activated.
+ * If defined, an eyedropper button will be added to the color picker.
+ * The button calls this function with a callback to update the field value.
+ */
+Blockly.FieldColour.activateEyedropper = null;
+
+/**
+ * Path to the eyedropper svg icon.
+ */
+Blockly.FieldColour.EYEDROPPER_PATH = 'eyedropper.svg';
+
+/**
  * Install this field on a block.
  * @param {!Blockly.Block} block The block containing this field.
  */
 Blockly.FieldColour.prototype.init = function(block) {
   Blockly.FieldColour.superClass_.init.call(this, block);
   this.setValue(this.getValue());
-};
-
-/**
- * Mouse cursor style when over the hotspot that initiates the editor.
- */
-Blockly.FieldColour.prototype.CURSOR = 'default';
-
-/**
- * Close the colour picker if this input is being deleted.
- */
-Blockly.FieldColour.prototype.dispose = function() {
-  Blockly.WidgetDiv.hideIfOwner(this);
-  Blockly.FieldColour.superClass_.dispose.call(this);
 };
 
 /**
@@ -107,8 +108,32 @@ Blockly.FieldColour.prototype.setValue = function(colour) {
   if (this.sourceBlock_) {
     // Set the primary, secondary and tertiary colour to this value.
     // The renderer expects to be able to use the secondary color as the fill for a shadow.
-    this.sourceBlock_.setColour(colour, colour, colour);
+    this.sourceBlock_.setColour(colour, colour, this.sourceBlock_.getColourTertiary());
   }
+  var makeHueGradient = function(colour, type) {
+    var stops = [];
+    var hsv = goog.color.hexToHsv(colour);
+    for(var n = 0; n <= 360; n++) {
+      switch (type) {
+        case 'hue':
+          stops.push(goog.color.hsvToHex(n, hsv[1], hsv[2]));
+          break;
+        case 'saturation':
+          stops.push(goog.color.hsvToHex(hsv[0], n / 360, hsv[2]));
+          break;
+        case 'brightness':
+          stops.push(goog.color.hsvToHex(hsv[0], hsv[1], 255 * n / 360));
+          break;
+      }
+    }
+    return '-webkit-linear-gradient(left, ' + stops.join(',') + ')';
+  };
+  if (this.hueSlider_) {
+    goog.style.setStyle(this.hueSlider_.getElement(), 'background', makeHueGradient(colour, 'hue'));
+    goog.style.setStyle(this.saturationSlider_.getElement(), 'background', makeHueGradient(colour, 'saturation'));
+    goog.style.setStyle(this.brightnessSlider_.getElement(), 'background', makeHueGradient(colour, 'brightness'));
+  }
+
 };
 
 /**
@@ -123,61 +148,6 @@ Blockly.FieldColour.prototype.getText = function() {
     colour = '#' + m[1] + m[2] + m[3];
   }
   return colour;
-};
-
-/**
- * Returns the fixed height and width.
- * @return {!goog.math.Size} Height and width.
- */
-Blockly.FieldColour.prototype.getSize = function() {
-  return new goog.math.Size(Blockly.BlockSvg.FIELD_WIDTH, Blockly.BlockSvg.FIELD_HEIGHT);
-};
-
-/**
- * An array of colour strings for the palette.
- * See bottom of this page for the default:
- * http://docs.closure-library.googlecode.com/git/closure_goog_ui_colorpicker.js.source.html
- * @type {!Array.<string>}
- */
-Blockly.FieldColour.COLOURS = goog.ui.ColorPicker.SIMPLE_GRID_COLORS;
-
-/**
- * Number of columns in the palette.
- */
-Blockly.FieldColour.COLUMNS = 7;
-
-/**
- * Function to be called if eyedropper can be activated.
- * If defined, an eyedropper button will be added to the color picker.
- * The button calls this function with a callback to update the field value.
- */
-Blockly.FieldColour.activateEyedropper = null;
-
-/**
- * Path to the eyedropper svg icon.
- */
-Blockly.FieldColour.EYEDROPPER_PATH = 'eyedropper.svg';
-
-/**
- * Set a custom colour grid for this field.
- * @param {Array.<string>} colours Array of colours for this block,
- *     or null to use default (Blockly.FieldColour.COLOURS).
- * @return {!Blockly.FieldColour} Returns itself (for method chaining).
- */
-Blockly.FieldColour.prototype.setColours = function(colours) {
-  this.colours_ = colours;
-  return this;
-};
-
-/**
- * Set a custom grid size for this field.
- * @param {number} columns Number of columns for this block,
- *     or 0 to use default (Blockly.FieldColour.COLUMNS).
- * @return {!Blockly.FieldColour} Returns itself (for method chaining).
- */
-Blockly.FieldColour.prototype.setColumns = function(columns) {
-  this.columns_ = columns;
-  return this;
 };
 
 /**
@@ -196,53 +166,78 @@ Blockly.FieldColour.prototype.activateEyedropperInternal_ = function() {
  * @private
  */
 Blockly.FieldColour.prototype.showEditor_ = function() {
-  Blockly.WidgetDiv.show(this, this.sourceBlock_.RTL,
-      Blockly.FieldColour.widgetDispose_);
-  // Create the palette using Closure.
-  var picker = new goog.ui.ColorPicker();
-  picker.setSize(this.columns_ || Blockly.FieldColour.COLUMNS);
-  picker.setColors(this.colours_ || Blockly.FieldColour.COLOURS);
+  Blockly.DropDownDiv.hideWithoutAnimation();
+  Blockly.DropDownDiv.clearContent();
+  var div = Blockly.DropDownDiv.getContentDiv();
 
-  // Position the palette to line up with the field.
-  // Record windowSize and scrollOffset before adding the palette.
-  var windowSize = goog.dom.getViewportSize();
-  var scrollOffset = goog.style.getViewportPageOffset(document);
-  var xy = this.getAbsoluteXY_();
-  var borderBBox = this.getScaledBBox_();
-  var div = Blockly.WidgetDiv.DIV;
-  picker.render(div);
-  picker.setSelectedColor(this.getValue());
-  // Record paletteSize after adding the palette.
-  var paletteSize = goog.style.getSize(picker.getElement());
+  var hueSlider = new goog.ui.Slider();
+  hueSlider.setUnitIncrement(5);
+  hueSlider.setMinimum(0);
+  hueSlider.setMaximum(359);
+  hueSlider.render(div);
+  hueSlider.animatedSetValue(goog.color.hexToHsv(this.getValue())[0]); // @todo not working?
 
-  // Flip the palette vertically if off the bottom.
-  if (xy.y + paletteSize.height + borderBBox.height >=
-      windowSize.height + scrollOffset.y) {
-    xy.y -= paletteSize.height - 1;
-  } else {
-    xy.y += borderBBox.height - 1;
-  }
-  if (this.sourceBlock_.RTL) {
-    xy.x += borderBBox.width;
-    xy.x -= paletteSize.width;
-    // Don't go offscreen left.
-    if (xy.x < scrollOffset.x) {
-      xy.x = scrollOffset.x;
-    }
-  } else {
-    // Don't go offscreen right.
-    if (xy.x > windowSize.width + scrollOffset.x - paletteSize.width) {
-      xy.x = windowSize.width + scrollOffset.x - paletteSize.width;
-    }
-  }
-  Blockly.WidgetDiv.position(xy.x, xy.y, windowSize, scrollOffset,
-                             this.sourceBlock_.RTL);
+  var saturationSlider = new goog.ui.Slider();
+  saturationSlider.setUnitIncrement(0.01);
+  saturationSlider.setStep(0.001);
+  saturationSlider.setMinimum(0.01);
+  saturationSlider.setMaximum(0.99);
+  saturationSlider.render(div);
+
+  var brightnessSlider = new goog.ui.Slider();
+  brightnessSlider.setUnitIncrement(5);
+  brightnessSlider.setMinimum(0.01);
+  brightnessSlider.setMaximum(255);
+  brightnessSlider.render(div);
+
+  this.hueSlider_ = hueSlider;
+  this.saturationSlider_ = saturationSlider;
+  this.brightnessSlider_ = brightnessSlider;
+
+  // Configure event handler.
+  var thisField = this;
+  Blockly.FieldColour.hueChangeEventKey_ = goog.events.listen(hueSlider,
+        goog.ui.Component.EventType.CHANGE,
+        function(event) {
+          var hue = event.target.getValue();
+          var hsv = goog.color.hexToHsv(thisField.getValue());
+          var colour = goog.color.hsvToHex(hue, hsv[1], hsv[2]);
+
+
+          if (thisField.sourceBlock_) {
+            // Call any validation function, and allow it to override.
+            colour = thisField.callValidator(colour);
+          }
+          if (colour !== null) {
+            thisField.setValue(colour);
+          }
+        });
+
+    // Configure event handler.
+  var thisField = this;
+  Blockly.FieldColour.saturationChangeEventKey_ = goog.events.listen(saturationSlider,
+          goog.ui.Component.EventType.CHANGE,
+          function(event) {
+            var saturation = event.target.getValue();
+            var hsv = goog.color.hexToHsv(thisField.getValue());
+            var colour = goog.color.hsvToHex(hsv[0], saturation, hsv[2]);
+
+
+            if (thisField.sourceBlock_) {
+              // Call any validation function, and allow it to override.
+              colour = thisField.callValidator(colour);
+            }
+            if (colour !== null) {
+              thisField.setValue(colour);
+            }
+          });
 
   if (Blockly.FieldColour.activateEyedropper) {
     var button = document.createElement('button');
     var image = document.createElement('img');
     image.src = Blockly.mainWorkspace.options.pathToMedia + Blockly.FieldColour.EYEDROPPER_PATH;
     button.appendChild(image);
+    button.setAttribute('class', 'blocklyEyedropper');
     div.appendChild(button);
     Blockly.FieldColour.eyedropperEventData_ = Blockly.bindEventWithChecks_(button,
       'mousedown',
@@ -253,19 +248,32 @@ Blockly.FieldColour.prototype.showEditor_ = function() {
 
   // Configure event handler.
   var thisField = this;
-  Blockly.FieldColour.changeEventKey_ = goog.events.listen(picker,
-      goog.ui.ColorPicker.EventType.CHANGE,
-      function(event) {
-        var colour = event.target.getSelectedColor() || '#000000';
-        Blockly.WidgetDiv.hide();
-        if (thisField.sourceBlock_) {
-          // Call any validation function, and allow it to override.
-          colour = thisField.callValidator(colour);
-        }
-        if (colour !== null) {
-          thisField.setValue(colour);
-        }
-      });
+  Blockly.FieldColour.brightnessChangeEventKey_ = goog.events.listen(brightnessSlider,
+        goog.ui.Component.EventType.CHANGE,
+        function(event) {
+          var brightness = event.target.getValue();
+          var hsv = goog.color.hexToHsv(thisField.getValue());
+          var colour = goog.color.hsvToHex(hsv[0], hsv[1], brightness);
+
+
+          if (thisField.sourceBlock_) {
+            // Call any validation function, and allow it to override.
+            colour = thisField.callValidator(colour);
+          }
+          if (colour !== null) {
+            thisField.setValue(colour);
+          }
+        });
+
+  Blockly.DropDownDiv.setColour('#ffffff', '#dddddd');
+  Blockly.DropDownDiv.setCategory(this.sourceBlock_.parentBlock_.getCategory());
+  Blockly.DropDownDiv.showPositionedByBlock(this, this.sourceBlock_);
+
+  brightnessSlider.animatedSetValue(goog.color.hexToHsv(this.getValue())[2]);
+  saturationSlider.animatedSetValue(goog.color.hexToHsv(this.getValue())[1]);
+  hueSlider.animatedSetValue(goog.color.hexToHsv(this.getValue())[0]);
+
+  this.setValue(this.getValue());
 };
 
 /**
@@ -273,8 +281,14 @@ Blockly.FieldColour.prototype.showEditor_ = function() {
  * @private
  */
 Blockly.FieldColour.widgetDispose_ = function() {
-  if (Blockly.FieldColour.changeEventKey_) {
-    goog.events.unlistenByKey(Blockly.FieldColour.changeEventKey_);
+  if (Blockly.FieldColour.hueChangeEventKey_) {
+    goog.events.unlistenByKey(Blockly.FieldColour.hueChangeEventKey_);
+  }
+  if (Blockly.FieldColour.saturationChangeEventKey_) {
+    goog.events.unlistenByKey(Blockly.FieldColour.saturationChangeEventKey_);
+  }
+  if (Blockly.FieldColour.brightnessChangeEventKey_) {
+    goog.events.unlistenByKey(Blockly.FieldColour.brightnessChangeEventKey_);
   }
   if (Blockly.FieldColour.eyedropperEventData_) {
     Blockly.unbindEvent_(Blockly.FieldColour.eyedropperEventData_);

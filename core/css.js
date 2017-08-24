@@ -790,54 +790,31 @@ Blockly.Css.CONTENT = [
     'color: #fff;',
   '}',
 
-  /* Copied from: goog/css/colorpicker-simplegrid.css */
-  /*
-   * Copyright 2007 The Closure Library Authors. All Rights Reserved.
-   *
-   * Use of this source code is governed by the Apache License, Version 2.0.
-   * See the COPYING file for details.
-   */
-
-  /* Author: pupius@google.com (Daniel Pupius) */
-
-  /*
-    Styles to make the colorpicker look like the old gmail color picker
-    NOTE: without CSS scoping this will override styles defined in palette.css
-  */
-  '.blocklyWidgetDiv .goog-palette {',
-    'outline: none;',
-    'cursor: default;',
-  '}',
-
-  '.blocklyWidgetDiv .goog-palette-table {',
-    'border-collapse: collapse;',
-  '}',
-
-  '.blocklyWidgetDiv .goog-palette-cell {',
-    'height: 13px;',
-    'width: 15px;',
-    'margin: 0;',
-    'border: 0;',
-    'text-align: center;',
-    'vertical-align: middle;',
-    'font-size: 1px;',
-  '}',
-
-  '.blocklyWidgetDiv .goog-palette-colorswatch {',
+  '.blocklyDropDownDiv .goog-slider-horizontal {',
+    'margin: 15px;',
+    'height: 15px;',
+    'width: 200px;',
     'position: relative;',
-    'height: 13px;',
-    'width: 15px;',
+    'outline: none;',
+    'border-radius: 7.5px;',
+    'margin-top: 30px;',
   '}',
 
-  '.blocklyWidgetDiv .goog-palette-cell-hover .goog-palette-colorswatch {',
-    'border: 1px solid #FFF;',
+  '.blocklyDropDownDiv .goog-slider-horizontal .goog-slider-thumb {',
     'box-sizing: border-box;',
+    'width: 24px;',
+    'height: 24px;',
+    'margin-top: -2px;',
+    'position: absolute;',
+    'background: white;',
+    'border-radius: 100%;',
+    'border: 2px solid #ddd;',
   '}',
 
-  '.blocklyWidgetDiv .goog-palette-cell-selected .goog-palette-colorswatch {',
-    'border: 1px solid #000;',
-    'box-sizing: border-box;',
-    'color: #fff;',
+  '.blocklyEyedropper {',
+    'background: none;',
+    'outline: none;',
+    'border: none;',
   '}',
 
   /* Copied from: goog/css/menu.css */
