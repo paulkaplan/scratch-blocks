@@ -128,10 +128,16 @@ Blockly.FieldColour.prototype.setValue = function(colour) {
     }
     return '-webkit-linear-gradient(left, ' + stops.join(',') + ')';
   };
+
   if (this.hueSlider_) {
     goog.style.setStyle(this.hueSlider_.getElement(), 'background', makeHueGradient(colour, 'hue'));
     goog.style.setStyle(this.saturationSlider_.getElement(), 'background', makeHueGradient(colour, 'saturation'));
     goog.style.setStyle(this.brightnessSlider_.getElement(), 'background', makeHueGradient(colour, 'brightness'));
+
+    var hsv = goog.color.hexToHsv(colour);
+    this.hueReadout_.innerHTML = Math.floor(100 * hsv[0] / 360).toFixed(0);
+    this.saturationReadout_.innerHTML = Math.floor(100 * hsv[1]).toFixed(0);
+    this.brightnessReadout_.innerHTML = Math.floor(100 * hsv[2] / 255).toFixed(0);
   }
 
 };
@@ -162,6 +168,25 @@ Blockly.FieldColour.prototype.activateEyedropperInternal_ = function() {
 };
 
 /**
+ * Create label and readout DOM elements, returning the readout
+ * @param {string} labelText - Text for the label
+ * @return {Array} The container node and the readout node.
+ * @private
+ */
+Blockly.FieldColour.prototype.createLabelDom_ = function (labelText) {
+    var labelContainer = document.createElement('div');
+    labelContainer.setAttribute('class', 'scratchColorPickerLabel');
+    var readout = document.createElement('span');
+    readout.setAttribute('class', 'scratchColorPickerReadout');
+    var label = document.createElement('span');
+    label.setAttribute('class', 'scratchColorPickerLabelText');
+    label.innerHTML = labelText;
+    labelContainer.appendChild(label);
+    labelContainer.appendChild(readout);
+    return [labelContainer, readout];
+};
+
+/**
  * Create a palette under the colour field.
  * @private
  */
@@ -170,12 +195,20 @@ Blockly.FieldColour.prototype.showEditor_ = function() {
   Blockly.DropDownDiv.clearContent();
   var div = Blockly.DropDownDiv.getContentDiv();
 
+  var hueElements = this.createLabelDom_('Hue');
+  div.appendChild(hueElements[0]);
+  this.hueReadout_ = hueElements[1];
+
   var hueSlider = new goog.ui.Slider();
   hueSlider.setUnitIncrement(5);
   hueSlider.setMinimum(0);
   hueSlider.setMaximum(359);
   hueSlider.render(div);
   hueSlider.animatedSetValue(goog.color.hexToHsv(this.getValue())[0]); // @todo not working?
+
+  var saturationElements = this.createLabelDom_('Saturation');
+  div.appendChild(saturationElements[0]);
+  this.saturationReadout_ = saturationElements[1];
 
   var saturationSlider = new goog.ui.Slider();
   saturationSlider.setUnitIncrement(0.01);
@@ -184,9 +217,13 @@ Blockly.FieldColour.prototype.showEditor_ = function() {
   saturationSlider.setMaximum(0.99);
   saturationSlider.render(div);
 
+  var brightnessElements = this.createLabelDom_('Brightness');
+  div.appendChild(brightnessElements[0]);
+  this.brightnessReadout_ = brightnessElements[1];
+
   var brightnessSlider = new goog.ui.Slider();
-  brightnessSlider.setUnitIncrement(5);
-  brightnessSlider.setMinimum(0.01);
+  brightnessSlider.setUnitIncrement(2);
+  brightnessSlider.setMinimum(5);
   brightnessSlider.setMaximum(255);
   brightnessSlider.render(div);
 
@@ -237,7 +274,7 @@ Blockly.FieldColour.prototype.showEditor_ = function() {
     var image = document.createElement('img');
     image.src = Blockly.mainWorkspace.options.pathToMedia + Blockly.FieldColour.EYEDROPPER_PATH;
     button.appendChild(image);
-    button.setAttribute('class', 'blocklyEyedropper');
+    button.setAttribute('class', 'scratchEyedropper');
     div.appendChild(button);
     Blockly.FieldColour.eyedropperEventData_ = Blockly.bindEventWithChecks_(button,
       'mousedown',
