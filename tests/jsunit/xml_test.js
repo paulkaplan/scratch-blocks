@@ -106,7 +106,7 @@ function xmlTest_checkNonVariableField(fieldDom, name, text) {
   assertEquals(text, fieldDom.textContent);
   assertEquals(name, fieldDom.getAttribute('name'));
   assertNull(fieldDom.getAttribute('id'));
-  assertNull(fieldDom.getAttribute('variableType'));
+  assertNull(fieldDom.getAttribute('variable-type'));
 }
 
 /**
@@ -119,7 +119,7 @@ function xmlTest_checkNonVariableField(fieldDom, name, text) {
  */
 function xmlTest_checkVariableFieldDomValues(fieldDom, name, type, id, text) {
   assertEquals(name, fieldDom.getAttribute('name'));
-  assertEquals(type, fieldDom.getAttribute('variableType'));
+  assertEquals(type, fieldDom.getAttribute('variable-type'));
   assertEquals(id, fieldDom.getAttribute('id'));
   assertEquals(text, fieldDom.textContent);
 }
