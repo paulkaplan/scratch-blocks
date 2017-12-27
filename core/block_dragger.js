@@ -250,6 +250,20 @@ Blockly.BlockDragger.prototype.maybeDeleteBlock_ = function() {
   var trashcan = this.workspace_.trashcan;
 
   if (this.wouldDeleteBlock_) {
+    // Scratch-specific: delete behavior for custom block definitions.
+    if (this.draggingBlock_.type == Blockly.PROCEDURES_DEFINITION_BLOCK_TYPE) {
+      var defBlock = this.draggingBlock_;
+      var input = defBlock.getInput('custom_block');
+      if (input && input.connection && input.connection.targetBlock()) {
+        var procCode = input.connection.targetBlock().getProcCode();
+        if (!Blockly.Procedures.canDeleteProcedureDef(procCode, defBlock)) {
+          // TODO:(#1151)
+          alert('To delete a block definition, first remove all uses of the block');
+          return false;
+        }
+      }
+    }
+
     if (trashcan) {
       goog.Timer.callOnce(trashcan.close, 100, trashcan);
     }

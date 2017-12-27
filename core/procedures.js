@@ -540,6 +540,20 @@ Blockly.Procedures.makeShowDefinitionOption = function(block) {
 };
 
 /**
+ * Test if procedure definition can be deleted based on callers.
+ * @param {string} procCode The identifier of the procedure to delete.
+ * @param {!Blockly.Block} definitionRoot The root block of the stack that
+ *     defines the custom procedure.
+ * @return {boolean} True if the custom procedure was deleted, false otherwise.
+ * @public
+ */
+Blockly.Procedures.canDeleteProcedureDef = function (procCode, definitionRoot) {
+  var callers = Blockly.Procedures.getCallers(procCode,
+      definitionRoot.workspace, definitionRoot, false /* allowRecursive */);
+  return callers.length == 0
+};
+
+/**
  * Callback to try to delete a custom block definitions.
  * @param {string} procCode The identifier of the procedure to delete.
  * @param {!Blockly.Block} definitionRoot The root block of the stack that
@@ -549,14 +563,12 @@ Blockly.Procedures.makeShowDefinitionOption = function(block) {
  */
 Blockly.Procedures.deleteProcedureDefCallback = function(procCode,
     definitionRoot) {
-  var callers = Blockly.Procedures.getCallers(procCode,
-      definitionRoot.workspace, definitionRoot, false /* allowRecursive */);
-  if (callers.length > 0) {
-    return false;
+  if (Blockly.Procedures.canDeleteProcedureDef(procCode, definitionRoot)) {
+    // Delete the whole stack.
+    Blockly.Events.setGroup(true);
+    definitionRoot.dispose();
+    Blockly.Events.setGroup(false);
+    return true;
   }
-  // Delete the whole stack.
-  Blockly.Events.setGroup(true);
-  definitionRoot.dispose();
-  Blockly.Events.setGroup(false);
-  return true;
+  return false;
 };
