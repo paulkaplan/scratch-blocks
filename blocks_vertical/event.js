@@ -66,6 +66,20 @@ Blockly.Blocks['event_whenthisspriteclicked'] = {
   }
 };
 
+Blockly.Blocks['event_whenstageclicked'] = {
+  /**
+   * Block for when this sprite clicked.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": "when stage clicked",
+      "category": Blockly.Categories.event,
+      "extensions": ["colours_event", "shape_hat"]
+    });
+  }
+};
+
 Blockly.Blocks['event_whenbroadcastreceived'] = {
   /**
    * Block for when broadcast received.
