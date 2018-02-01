@@ -245,7 +245,10 @@ Blockly.Css.CONTENT = [
     'border-radius: 4px;',
     'box-shadow: 0px 0px 8px 1px ' + Blockly.Colours.dropDownShadow + ';',
     'padding: 4px;',
+    'user-select: none;',
     '-webkit-user-select: none;',
+    '-moz-user-select: none;',
+    '-ms-user-select: none;',
   '}',
 
   '.blocklyDropDownContent {',
@@ -529,8 +532,9 @@ Blockly.Css.CONTENT = [
   */
   '.blocklySvg text, .blocklyBlockDragSurface text, .blocklyFlyout text, .blocklyToolboxDiv text {',
     'user-select: none;',
-    '-moz-user-select: none;',
     '-webkit-user-select: none;',
+    '-moz-user-select: none;',
+    '-ms-user-select: none;',
     'cursor: inherit;',
   '}',
 
