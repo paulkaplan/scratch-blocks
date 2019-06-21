@@ -164,9 +164,8 @@ Blockly.FieldNumber.prototype.setConstraints_ = function(opt_min, opt_max,
  */
 Blockly.FieldNumber.prototype.showEditor_ = function() {
   Blockly.FieldNumber.activeField_ = this;
-  // Do not focus on mobile devices so we can show the num-pad
-  var showNumPad =
-      goog.userAgent.MOBILE || goog.userAgent.ANDROID || goog.userAgent.IPAD;
+  // Do not focus for touchscreen so we can show the num-pad
+  var showNumPad = Blockly.Touch.touchIdentifier_ !== 'mouse';
   Blockly.FieldNumber.superClass_.showEditor_.call(this, false, showNumPad);
 
   // Show a numeric keypad in the drop-down on touch
