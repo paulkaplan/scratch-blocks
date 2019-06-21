@@ -108,7 +108,7 @@ Blockly.Colours = {
   "numPadBackground": "#547AB2",
   "numPadBorder": "#435F91",
   "numPadActiveBackground": "#435F91",
-  "numPadText": "#FFFFFF",
+  "numPadText": "white", // Cannot use # character in data-uri
   "valueReportBackground": "#FFFFFF",
   "valueReportBorder": "#AAAAAA"
 };
