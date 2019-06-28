@@ -168,9 +168,7 @@ Blockly.FieldAngle.prototype.dispose_ = function() {
  * @private
  */
 Blockly.FieldAngle.prototype.showEditor_ = function() {
-  var noFocus =
-      goog.userAgent.MOBILE || goog.userAgent.ANDROID || goog.userAgent.IPAD;
-  // Mobile browsers have issues with in-line textareas (focus & keyboards).
+  var noFocus = Blockly.Touch.touchIdentifier_ !== 'mouse';
   Blockly.FieldAngle.superClass_.showEditor_.call(this, noFocus);
   // If there is an existing drop-down someone else owns, hide it immediately and clear it.
   Blockly.DropDownDiv.hideWithoutAnimation();

@@ -381,8 +381,7 @@ Blockly.FieldNote.prototype.dispose_ = function() {
  * @private
  */
 Blockly.FieldNote.prototype.showEditor_ = function() {
-  var noFocus =
-      goog.userAgent.MOBILE || goog.userAgent.ANDROID || goog.userAgent.IPAD;
+  var noFocus = Blockly.Touch.touchIdentifier_ !== 'mouse';
   // Mobile browsers have issues with in-line textareas (focus & keyboards).
   Blockly.FieldNote.superClass_.showEditor_.call(this, noFocus);
 
