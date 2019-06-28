@@ -294,7 +294,8 @@ Blockly.FieldNumber.numPadButtonTouch = function() {
   var newValue = oldValue.slice(0, selectionStart) + spliceValue +
       oldValue.slice(selectionEnd);
 
-  Blockly.FieldNumber.updateDisplay_(newValue);
+  // Set new value and advance the cursor
+  Blockly.FieldNumber.updateDisplay_(newValue, selectionEnd + 1);
 
   // This is just a click.
   Blockly.Touch.clearTouchIdentifier();
@@ -310,15 +311,16 @@ Blockly.FieldNumber.numPadEraseButtonTouch = function() {
   // Determine what is selected to erase (if anything)
   var selectionStart = Blockly.FieldTextInput.htmlInput_.selectionStart;
   var selectionEnd = Blockly.FieldTextInput.htmlInput_.selectionEnd;
+
   // Cut out anything that was previously selected
   var newValue = oldValue.slice(0, selectionStart) +
       oldValue.slice(selectionEnd);
   if (selectionEnd - selectionStart == 0) { // Length of selection == 0
     // Delete the last character if nothing was selected
-    newValue = oldValue.slice(0, selectionStart - 1) +
+    newValue = oldValue.slice(0, Math.max(0, selectionStart - 1)) +
         oldValue.slice(selectionStart);
   }
-  Blockly.FieldNumber.updateDisplay_(newValue);
+  Blockly.FieldNumber.updateDisplay_(newValue, Math.max(0, selectionStart - 1));
 
   // This is just a click.
   Blockly.Touch.clearTouchIdentifier();
@@ -327,18 +329,19 @@ Blockly.FieldNumber.numPadEraseButtonTouch = function() {
 /**
  * Update the displayed value and resize/scroll the text field as needed.
  * @param {string} newValue The new text to display.
+ * @param {string} newSelection The new index to put the cursor
  * @private.
  */
-Blockly.FieldNumber.updateDisplay_ = function(newValue) {
+Blockly.FieldNumber.updateDisplay_ = function(newValue, newSelection) {
+  var htmlInput = Blockly.FieldTextInput.htmlInput_;
   // Updates the display. The actual setValue occurs when editing ends.
-  Blockly.FieldTextInput.htmlInput_.value = newValue;
+  htmlInput.value = newValue;
   // Resize and scroll the text field appropriately
   Blockly.FieldNumber.superClass_.resizeEditor_.call(
       Blockly.FieldNumber.activeField_);
-  Blockly.FieldTextInput.htmlInput_.setSelectionRange(newValue.length,
-      newValue.length);
-  Blockly.FieldTextInput.htmlInput_.scrollLeft =
-      Blockly.FieldTextInput.htmlInput_.scrollWidth;
+  htmlInput.setSelectionRange(newSelection, newSelection);
+  htmlInput.scrollLeft = htmlInput.scrollWidth;
+
   Blockly.FieldNumber.activeField_.validate_();
 };
 
